@@ -28,21 +28,27 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter  {
 			throws ServletException, IOException {
 		
 		response.addHeader("Access-Control-Allow-Origin", "*");
-		response.addHeader("Access-Control-Allow-Headers", "Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers,autorization");
-		response.addHeader("Access-Control-Expose-Headers", "Access-Control-Allow-Origin,Access-Control-Allow-Credentials,autorization");
+		response.addHeader("Access-Control-Allow-Headers", "Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers,Authorization");
+		response.addHeader("Access-Control-Expose-Headers", "Access-Control-Allow-Origin,Access-Control-Allow-Credentials,Authorization");
 		response.addHeader("Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,PATCH");
+		
 		if (request.getMethod().equals("OPTIONS")) {
+			//System.out.println("requet option.");
 			response.setStatus(HttpServletResponse.SC_OK);
 		} 
 		else {
 			String jwt = request.getHeader(SecurityParams.JWT_HEADER_NAME);
-			if(jwt == null || jwt.startsWith(SecurityParams.HEADER_PREFIX)) {
+			//System.out.println(request.getHeaderNames().nextElement());				
+			
+			//System.out.println(jwt);
+			if(jwt == null || !jwt.startsWith(SecurityParams.HEADER_PREFIX)) {
 				filterChain.doFilter(request, response);
 				return ;
 			}
 			JWTVerifier verifier = JWT.require(Algorithm.HMAC256(SecurityParams.SECRET)).build();
 			DecodedJWT decodedJWT = verifier.verify(jwt.substring(SecurityParams.HEADER_PREFIX.length()));
 			String username = decodedJWT.getSubject();
+			//System.out.println(username);
 			List<String> roles = decodedJWT.getClaims().get("roles").asList(String.class);
 			Collection<GrantedAuthority> authorities = new ArrayList<>();
 			roles.forEach(rn->{
